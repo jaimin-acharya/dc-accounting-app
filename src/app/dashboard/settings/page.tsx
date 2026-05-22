@@ -209,9 +209,9 @@ export default function SettingsPage() {
         <p className="section-subtitle">Configure your ERP system preferences</p>
       </div>
 
-      <div style={{ display: "flex", gap: 20 }}>
+      <div className="settings-container">
         {/* Sidebar Tabs */}
-        <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+        <div className="settings-tabs">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.key;
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                   <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: 24 }}>
                     Company Profile
                   </h3>
-                  <div style={{ display: "flex", gap: 20, alignItems: "flex-start", marginBottom: 24 }}>
+                  <div style={{ display: "flex", gap: 20, alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap" }}>
                     <div style={{ width: 80, height: 80, borderRadius: 20, background: companyForm.logoPath ? "transparent" : "linear-gradient(135deg, #10B981, #34D399)", border: companyForm.logoPath ? "1px solid var(--border-color)" : "none", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                       {companyForm.logoPath ? (
                         <img src={companyForm.logoPath} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                       <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>PNG or JPG, max 2MB. Recommended 400×400px.</p>
                     </div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="responsive-grid-2" style={{ gap: 16 }}>
                     <div>
                       <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>Company Name</label>
                       <input value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} placeholder="Dhruvanshi Construction" className="input-field" />
@@ -358,7 +358,7 @@ export default function SettingsPage() {
                   <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: 24 }}>
                     GST Configuration & Banking
                   </h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="responsive-grid-2" style={{ gap: 16 }}>
                     <div>
                       <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>GSTIN</label>
                       <input value={companyForm.gstin} onChange={(e) => setCompanyForm({ ...companyForm, gstin: e.target.value })} placeholder="24AAACC1234C1ZX" className="input-field" />
@@ -419,29 +419,33 @@ export default function SettingsPage() {
                       {users.map((user) => {
                         const roleStyle = roleColors[user.role] || { color: "var(--text-secondary)", bg: "var(--bg-glass)" };
                         return (
-                          <div key={user.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", borderRadius: 12 }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #10B981, #34D399)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 800, color: "#1A1A1A", flexShrink: 0 }}>
-                              {user.name.charAt(0).toUpperCase()}
+                          <div key={user.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", borderRadius: 12, flexWrap: "wrap" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 14, flex: "1 1 200px", minWidth: 0 }}>
+                              <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #10B981, #34D399)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 800, color: "#1A1A1A", flexShrink: 0 }}>
+                                {user.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>{user.name}</div>
+                                <div style={{ fontSize: "12px", color: "var(--text-muted)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{user.email}</div>
+                              </div>
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)" }}>{user.name}</div>
-                              <div style={{ fontSize: "12px", color: "var(--text-muted)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{user.email}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", justifyContent: "space-between", flex: "1 1 auto" }}>
+                              <span style={{ padding: "2px 10px", borderRadius: 20, fontSize: "11px", fontWeight: 600, color: roleStyle.color, background: roleStyle.bg }}>
+                                {user.role}
+                              </span>
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "right" }}>
+                                <div>Last active</div>
+                                <div style={{ fontWeight: 500 }}>{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString("en-IN") : "Never"}</div>
+                              </div>
+                              <button
+                                onClick={() => handleDeleteUser(user.id)}
+                                style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", transition: "all 0.15s" }}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
                             </div>
-                            <span style={{ padding: "2px 10px", borderRadius: 20, fontSize: "11px", fontWeight: 600, color: roleStyle.color, background: roleStyle.bg }}>
-                              {user.role}
-                            </span>
-                            <div style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "right" }}>
-                              <div>Last active</div>
-                              <div style={{ fontWeight: 500 }}>{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString("en-IN") : "Never"}</div>
-                            </div>
-                            <button
-                              onClick={() => handleDeleteUser(user.id)}
-                              style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", transition: "all 0.15s" }}
-                              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
-                              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
-                            >
-                              <Trash2 size={13} />
-                            </button>
                           </div>
                         );
                       })}
@@ -461,7 +465,7 @@ export default function SettingsPage() {
                       <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                         Color Theme
                       </label>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                      <div className="responsive-grid-3" style={{ gap: 12 }}>
                         {[
                           { name: "Dark Emerald (Active)", primary: "#10B981", bg: "#0F0F0F", active: true },
                           { name: "Sleek Charcoal", primary: "#6B7280", bg: "#1F2937", active: false },
@@ -484,7 +488,7 @@ export default function SettingsPage() {
                   <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: 24 }}>
                     Backup & Restore
                   </h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="responsive-grid-2" style={{ gap: 16 }}>
                     <div style={{ padding: 20, background: "var(--bg-glass)", borderRadius: 14, border: "1px solid var(--border-subtle)" }}>
                       <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
                         <Download size={18} color="#22c55e" />

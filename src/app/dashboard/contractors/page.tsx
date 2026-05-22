@@ -135,7 +135,7 @@ export default function ContractorsPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div className="responsive-grid-4">
         {[
           { label: "Total Contractors", value: contractors.length, color: "#10B981", icon: Users },
           { label: "Active This Month", value: activeCount, color: "#22c55e", icon: HardHat },
@@ -194,7 +194,7 @@ export default function ContractorsPage() {
         <>
           {/* Contractors Cards */}
           {tab === "contractors" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+            <div className="responsive-grid-2">
               {filtered.map((c, i) => (
                 <motionFramer.div key={c.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card hover-lift" style={{ padding: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
@@ -227,7 +227,7 @@ export default function ContractorsPage() {
                     <span style={{ padding: "2px 8px", borderRadius: 20, fontSize: "11px", fontWeight: 600, color: "#10B981", background: "rgba(16,185,129,0.12)" }}>{c.specialty || "General Contractor"}</span>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                  <div className="responsive-grid-2" style={{ gap: 10, marginBottom: 14 }}>
                     {[
                       { label: "Daily Rate", value: c.dailyRate ? `₹${c.dailyRate}/day` : "Not Set" },
                       { label: "GSTIN", value: c.gstin || "N/A" },
@@ -264,7 +264,8 @@ export default function ContractorsPage() {
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>Estimated Payroll Projections (22 Days Working)</span>
               </div>
-              <table className="data-table">
+              <div className="table-container">
+                <table className="data-table">
                 <thead>
                   <tr>
                     <th>Contractor</th>
@@ -289,6 +290,7 @@ export default function ContractorsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </>
@@ -324,7 +326,7 @@ export default function ContractorsPage() {
               )}
 
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Full Name *</label>
                     <input
@@ -346,7 +348,7 @@ export default function ContractorsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Phone Number</label>
                     <input
@@ -368,7 +370,7 @@ export default function ContractorsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Specialty / Trade</label>
                     <input
@@ -390,7 +392,7 @@ export default function ContractorsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>GSTIN</label>
                     <input
@@ -411,7 +413,7 @@ export default function ContractorsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Bank Account Number</label>
                     <input

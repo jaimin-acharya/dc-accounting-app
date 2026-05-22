@@ -341,7 +341,7 @@ export default function ProjectsPage() {
 
           {/* Stats Widget */}
           {projects.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            <div className="responsive-grid-4">
               {[
                 { label: "Total Value", value: formatCurrency(projects.reduce((s, p) => s + p.contractValue, 0)), color: "#10B981" },
                 { label: "Active Projects", value: projects.filter((p) => p.status === "ACTIVE").length.toString(), color: "#22c55e" },
@@ -378,7 +378,7 @@ export default function ProjectsPage() {
               )}
             </div>
           ) : view === "grid" ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            <div className="responsive-grid-3">
               {filtered.map((project, i) => {
                 const status = statusConfig[project.status] || statusConfig.PLANNING;
                 return (
@@ -430,7 +430,8 @@ export default function ProjectsPage() {
             </div>
           ) : (
             <div className="glass-card" style={{ overflow: "hidden" }}>
-              <table className="data-table">
+              <div className="table-container">
+                <table className="data-table">
                 <thead>
                   <tr><th>Project</th><th>Client</th><th>Status</th><th>Progress</th><th>Contract Value</th><th>End Date</th><th></th></tr>
                 </thead>
@@ -460,6 +461,7 @@ export default function ProjectsPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </>
@@ -499,7 +501,8 @@ export default function ProjectsPage() {
             </div>
           ) : (
             <div className="glass-card" style={{ overflow: "hidden" }}>
-              <table className="data-table">
+              <div className="table-container">
+                <table className="data-table">
                 <thead>
                   <tr>
                     <th>Client / Company</th>
@@ -557,6 +560,7 @@ export default function ProjectsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </>
@@ -573,7 +577,7 @@ export default function ProjectsPage() {
               </div>
               
               <form onSubmit={handleSubmit}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="responsive-grid-2" style={{ gap: 14 }}>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Project Name *</label>
                     <input type="text" placeholder="e.g. Riviera Heights Apartment" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} className="input-field" required />
@@ -675,7 +679,7 @@ export default function ProjectsPage() {
               </div>
 
               <form onSubmit={(e) => handleClientSubmit(e, false)}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="responsive-grid-2" style={{ gap: 14 }}>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Client Name *</label>
                     <input type="text" placeholder="e.g. Patel Builders Pvt Ltd" value={clientForm.name} onChange={(e) => setClientForm((prev) => ({ ...prev, name: e.target.value }))} className="input-field" required />
@@ -741,7 +745,7 @@ export default function ProjectsPage() {
               </div>
 
               <form onSubmit={(e) => handleClientSubmit(e, true)}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Client Name *</label>
                     <input type="text" placeholder="Patel Builders" value={clientForm.name} onChange={(e) => setClientForm((prev) => ({ ...prev, name: e.target.value }))} className="input-field" required />

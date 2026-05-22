@@ -73,7 +73,7 @@ export default function LoginPage() {
         }}
       />
 
-      <div style={{ display: "flex", gap: 80, alignItems: "center", zIndex: 1 }}>
+      <div className="login-flex-container">
         {/* Left — Branding */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
@@ -427,6 +427,28 @@ export default function LoginPage() {
       </div>
 
       <style>{`
+        .login-flex-container {
+          display: flex;
+          gap: 80px;
+          align-items: center;
+          z-index: 1;
+          flex-direction: row;
+        }
+        @media (max-width: 1023px) {
+          .login-flex-container {
+            flex-direction: column;
+            gap: 40px;
+            padding: 24px;
+            text-align: center;
+            max-width: 480px;
+            margin: 40px auto;
+          }
+          .login-flex-container > div:first-child {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+        }
         @keyframes spin {
           to { transform: rotate(360deg); }
         }

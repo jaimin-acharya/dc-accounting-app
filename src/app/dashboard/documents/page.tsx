@@ -240,7 +240,7 @@ export default function DocumentsPage() {
           </button>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+        <div className="responsive-grid-3">
           {filtered.map((doc, i) => {
             const fi = fileIcon(doc.type);
             const FileIcon = fi.icon;
@@ -340,7 +340,7 @@ export default function DocumentsPage() {
                   />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label className="form-label" style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>File Type</label>
                     <select
@@ -369,7 +369,7 @@ export default function DocumentsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label className="form-label" style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>Category</label>
                     <select

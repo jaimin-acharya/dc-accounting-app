@@ -41,6 +41,7 @@ let mainWindow = null;
 let tray = null;
 let serverProcess = null;
 const NEXT_PORT = 3000;
+const REMOTE_URL = 'https://dc-accounting-app.vercel.app';
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 1440,
@@ -60,61 +61,79 @@ function createWindow() {
         show: false,
     });
     const isDev = !electron_1.app.isPackaged;
+    const useLocal = process.env.USE_LOCAL === 'true';
+    // Handle server connection failures by retrying
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+        if (validatedURL.startsWith(`http://localhost:${NEXT_PORT}`)) {
+            console.log('Local server not ready, retrying load in 500ms...');
+            setTimeout(() => {
+                mainWindow?.loadURL(`http://localhost:${NEXT_PORT}`);
+            }, 500);
+        }
+        else if (validatedURL.startsWith(REMOTE_URL)) {
+            console.log('Remote server not reachable, retrying load in 5000ms...');
+            setTimeout(() => {
+                mainWindow?.loadURL(REMOTE_URL);
+            }, 5000);
+        }
+    });
     if (isDev) {
-        mainWindow.loadURL(`http://localhost:${NEXT_PORT}`);
+        if (useLocal) {
+            mainWindow.loadURL(`http://localhost:${NEXT_PORT}`);
+        }
+        else {
+            mainWindow.loadURL(REMOTE_URL);
+        }
         mainWindow.webContents.openDevTools({ mode: 'detach' });
     }
     else {
-        // Ensure the database is copied to a writeable location
-        const userDataPath = electron_1.app.getPath('userData');
-        const dbDir = path.join(userDataPath, 'database');
-        if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true });
-        }
-        const dbPath = path.join(dbDir, 'dev.db');
-        if (!fs.existsSync(dbPath)) {
-            // Find the source DB in the app package
-            const srcDbPath = path.join(electron_1.app.getAppPath(), 'prisma/dev.db');
-            if (fs.existsSync(srcDbPath)) {
-                try {
-                    fs.copyFileSync(srcDbPath, dbPath);
-                    console.log('Database initialized successfully at:', dbPath);
+        if (useLocal) {
+            // Ensure the database is copied to a writeable location
+            const userDataPath = electron_1.app.getPath('userData');
+            const dbDir = path.join(userDataPath, 'database');
+            if (!fs.existsSync(dbDir)) {
+                fs.mkdirSync(dbDir, { recursive: true });
+            }
+            const dbPath = path.join(dbDir, 'dev.db');
+            if (!fs.existsSync(dbPath)) {
+                // Find the source DB in the app package
+                const srcDbPath = path.join(electron_1.app.getAppPath(), 'prisma/dev.db');
+                if (fs.existsSync(srcDbPath)) {
+                    try {
+                        fs.copyFileSync(srcDbPath, dbPath);
+                        console.log('Database initialized successfully at:', dbPath);
+                    }
+                    catch (err) {
+                        console.error('Failed to copy database on startup:', err);
+                    }
                 }
-                catch (err) {
-                    console.error('Failed to copy database on startup:', err);
+                else {
+                    console.warn('Source database not found at:', srcDbPath);
                 }
             }
-            else {
-                console.warn('Source database not found at:', srcDbPath);
-            }
+            // Start Next.js standalone server programmatically in production
+            const serverPath = path.join(electron_1.app.getAppPath(), '.next/standalone/server.js');
+            // Fork the standalone server.js with correct cwd and environment variables
+            serverProcess = (0, child_process_1.fork)(serverPath, [], {
+                cwd: electron_1.app.getAppPath(),
+                env: {
+                    ...process.env,
+                    PORT: NEXT_PORT.toString(),
+                    HOSTNAME: 'localhost',
+                    NODE_ENV: 'production',
+                    DB_PATH: dbPath,
+                },
+                silent: false
+            });
+            // Wait a brief moment for Next.js standalone server to start, then load the URL
+            setTimeout(() => {
+                mainWindow?.loadURL(`http://localhost:${NEXT_PORT}`);
+            }, 500);
         }
-        // Start Next.js standalone server programmatically in production
-        const serverPath = path.join(electron_1.app.getAppPath(), '.next/standalone/server.js');
-        // Fork the standalone server.js with correct cwd and environment variables
-        serverProcess = (0, child_process_1.fork)(serverPath, [], {
-            cwd: electron_1.app.getAppPath(),
-            env: {
-                ...process.env,
-                PORT: NEXT_PORT.toString(),
-                HOSTNAME: 'localhost',
-                NODE_ENV: 'production',
-                DB_PATH: dbPath,
-            },
-            silent: false
-        });
-        // Handle initial server connection failures by retrying
-        mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-            if (validatedURL.startsWith(`http://localhost:${NEXT_PORT}`)) {
-                console.log('Server not ready, retrying load in 500ms...');
-                setTimeout(() => {
-                    mainWindow?.loadURL(`http://localhost:${NEXT_PORT}`);
-                }, 500);
-            }
-        });
-        // Wait a brief moment for Next.js standalone server to start, then load the URL
-        setTimeout(() => {
-            mainWindow?.loadURL(`http://localhost:${NEXT_PORT}`);
-        }, 500);
+        else {
+            // Load remote URL directly without starting local server
+            mainWindow.loadURL(REMOTE_URL);
+        }
     }
     mainWindow.once('ready-to-show', () => {
         mainWindow?.show();

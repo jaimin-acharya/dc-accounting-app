@@ -309,20 +309,14 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 16,
-        }}
-      >
+      <div className="responsive-grid-4">
         {kpiData.map((kpi) => (
           <KpiCard key={kpi.title} {...kpi} />
         ))}
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 320px", gap: 16 }}>
+      <div className="dashboard-charts-grid">
         {/* Cash Flow Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -487,7 +481,7 @@ export default function DashboardPage() {
             <ArrowUpRight size={12} />
           </a>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+        <div className="responsive-grid-2">
           {!data?.projects || data.projects.length === 0 ? (
             <div style={{ gridColumn: "1 / -1", padding: "32px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>
               No active projects found. Add your first project in the Projects page!

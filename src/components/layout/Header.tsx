@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Bell, Sun, Moon, ChevronDown } from "lucide-react";
+import { Search, Bell, Sun, Moon, ChevronDown, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface HeaderProps {
   onCommandOpen: () => void;
   sidebarCollapsed: boolean;
+  onMobileSidebarToggle?: () => void;
 }
 
-export function Header({ onCommandOpen }: HeaderProps) {
+export function Header({ onCommandOpen, onMobileSidebarToggle }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -37,6 +38,27 @@ export function Header({ onCommandOpen }: HeaderProps) {
         flexShrink: 0,
       }}
     >
+      {/* Hamburger menu button for mobile */}
+      <button
+        onClick={onMobileSidebarToggle}
+        className="show-mobile"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          border: "1px solid var(--border-subtle)",
+          background: "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          color: "var(--text-muted)",
+          flexShrink: 0,
+        }}
+      >
+        <Menu size={18} />
+      </button>
+
       {/* Search Bar */}
       <button
         onClick={onCommandOpen}
@@ -51,7 +73,9 @@ export function Header({ onCommandOpen }: HeaderProps) {
           cursor: "pointer",
           color: "var(--text-muted)",
           fontSize: "13px",
-          minWidth: 240,
+          minWidth: 120,
+          maxWidth: 240,
+          flex: 1,
           transition: "all 0.2s ease",
         }}
         onMouseEnter={(e) => {
@@ -62,8 +86,9 @@ export function Header({ onCommandOpen }: HeaderProps) {
         }}
       >
         <Search size={14} />
-        <span>Search anything...</span>
+        <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>Search...</span>
         <span
+          className="hidden-mobile"
           style={{
             marginLeft: "auto",
             fontSize: "11px",
@@ -280,7 +305,7 @@ export function Header({ onCommandOpen }: HeaderProps) {
           >
             {(session?.name || "A").charAt(0).toUpperCase()}
           </div>
-          <div>
+          <div className="hidden-mobile">
             <div
               style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.1 }}
             >
@@ -290,7 +315,7 @@ export function Header({ onCommandOpen }: HeaderProps) {
               {session?.role || "ADMIN"}
             </div>
           </div>
-          <ChevronDown size={12} color="var(--text-muted)" />
+          <ChevronDown size={12} color="var(--text-muted)" className="hidden-mobile" />
         </div>
       </div>
     </header>

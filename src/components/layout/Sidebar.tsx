@@ -290,41 +290,43 @@ export function Sidebar({ collapsed, onToggle, currentPath }: SidebarProps) {
           </AnimatePresence>
         </button>
 
-        <button
-          onClick={onToggle}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            padding: "8px",
-            borderRadius: 10,
-            border: "1px solid var(--border-subtle)",
-            background: "transparent",
-            color: "var(--text-muted)",
-            cursor: "pointer",
-            width: "100%",
-            fontSize: "12px",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--bg-glass)";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
-          }}
-        >
-          <ChevronLeft
-            size={14}
+        <div className="hidden-mobile">
+          <button
+            onClick={onToggle}
             style={{
-              transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              padding: "8px",
+              borderRadius: 10,
+              border: "1px solid var(--border-subtle)",
+              background: "transparent",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              width: "100%",
+              fontSize: "12px",
+              transition: "all 0.2s ease",
             }}
-          />
-          {!collapsed && <span>Collapse</span>}
-        </button>
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "var(--bg-glass)";
+              (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
+            }}
+          >
+            <ChevronLeft
+              size={14}
+              style={{
+                transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.3s ease",
+              }}
+            />
+            {!collapsed && <span>Collapse</span>}
+          </button>
+        </div>
       </div>
     </motion.aside>
   );

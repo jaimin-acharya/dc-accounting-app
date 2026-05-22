@@ -111,7 +111,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Report Tiles */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+      <div className="responsive-grid-3">
         {reportTypes.map((report, i) => (
           <motion.div
             key={report.label}
@@ -219,7 +219,8 @@ export default function ReportsPage() {
                 No active projects found. Create projects under the Projects menu to monitor site profitability.
               </div>
             ) : (
-              <table className="data-table">
+              <div className="table-container">
+                <table className="data-table">
                 <thead>
                   <tr>
                     <th>Project</th>
@@ -254,6 +255,7 @@ export default function ReportsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </motion.div>
         </>

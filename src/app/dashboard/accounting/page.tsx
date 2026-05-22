@@ -279,7 +279,7 @@ export default function AccountingPage() {
       </div>
 
       {/* Financial Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div className="responsive-grid-4">
         {[
           { label: "Total Assets", value: totalAssets, color: "#22c55e", icon: TrendingUp },
           { label: "Total Liabilities", value: totalLiabilities, color: "#ef4444", icon: ArrowRightLeft },
@@ -306,23 +306,21 @@ export default function AccountingPage() {
       {/* Quick P&L banner */}
       <div
         className="glass-card"
-        style={{ padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+        style={{ padding: "16px 24px" }}
       >
-        <div style={{ display: "flex", gap: 40 }}>
+        <div className="responsive-grid-3" style={{ width: "100%" }}>
           <div>
             <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>Gross Profit</div>
             <div style={{ fontSize: "1.5rem", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: "#22c55e" }}>
               {formatCurrency(totalRevenue - totalExpenses)}
             </div>
           </div>
-          <div style={{ width: 1, background: "var(--border-subtle)" }} />
           <div>
             <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>Net Worth</div>
             <div style={{ fontSize: "1.5rem", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: "var(--text-emerald)" }}>
               {formatCurrency(totalAssets - totalLiabilities)}
             </div>
           </div>
-          <div style={{ width: 1, background: "var(--border-subtle)" }} />
           <div>
             <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>Estimated GST Liability</div>
             <div style={{ fontSize: "1.5rem", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: "#3b82f6" }}>
@@ -354,7 +352,7 @@ export default function AccountingPage() {
           {/* Ledger Tab */}
           {tab === "ledger" && (
             <>
-              <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ position: "relative", flex: 1, maxWidth: 280 }}>
                   <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
                   <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search accounts..." className="input-field" style={{ paddingLeft: 36 }} />
@@ -378,7 +376,8 @@ export default function AccountingPage() {
                 </div>
               ) : (
                 <div className="glass-card" style={{ overflow: "hidden" }}>
-                  <table className="data-table">
+                  <div className="table-container">
+                    <table className="data-table">
                     <thead>
                       <tr>
                         <th>Account Code</th>
@@ -410,6 +409,7 @@ export default function AccountingPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </>
@@ -433,7 +433,8 @@ export default function AccountingPage() {
                 <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>Double-Entry Journal Logs</span>
                 </div>
-                <table className="data-table">
+                <div className="table-container">
+                  <table className="data-table">
                   <thead>
                     <tr>
                       <th>Entry #</th>
@@ -471,6 +472,7 @@ export default function AccountingPage() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             )
           )}
@@ -507,7 +509,7 @@ export default function AccountingPage() {
               )}
 
               <form onSubmit={handleCreateJournal} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Entry Type</label>
                     <select
@@ -534,7 +536,7 @@ export default function AccountingPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Debit Account (Dr) *</label>
                     <select
@@ -567,7 +569,7 @@ export default function AccountingPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Amount (INR) *</label>
                     <input
@@ -647,7 +649,7 @@ export default function AccountingPage() {
               )}
 
               <form onSubmit={handleCreateAccount} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Account Code *</label>
                     <input
@@ -670,7 +672,7 @@ export default function AccountingPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase" }}>Account Type</label>
                     <select

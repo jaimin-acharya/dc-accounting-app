@@ -16,6 +16,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const session = localStorage.getItem("dc_session");
@@ -23,6 +24,10 @@ export default function DashboardLayout({
       router.replace("/login");
     }
   }, [router]);
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,17 +110,32 @@ export default function DashboardLayout({
       </div>
 
       {/* Main Content */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((p) => !p)}
-          currentPath={pathname}
-        />
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+        {/* Mobile Backdrop */}
+        {mobileSidebarOpen && (
+          <div
+            className="mobile-backdrop show-mobile"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar Container (Responsive) */}
+        <div
+          className={mobileSidebarOpen ? "mobile-sidebar-drawer" : "hidden-mobile"}
+          style={{ height: "100%", display: "flex", flexShrink: 0 }}
+        >
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed((p) => !p)}
+            currentPath={pathname}
+          />
+        </div>
 
         <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
           <Header
             onCommandOpen={() => setCommandOpen(true)}
             sidebarCollapsed={sidebarCollapsed}
+            onMobileSidebarToggle={() => setMobileSidebarOpen((prev) => !prev)}
           />
 
           <main
