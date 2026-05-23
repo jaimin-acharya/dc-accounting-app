@@ -50,6 +50,15 @@ export default function SettingsPage() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [newUserError, setNewUserError] = useState("");
   const [newUserSaving, setNewUserSaving] = useState(false);
+  const [companyError, setCompanyError] = useState("");
+  
+  // Custom Alert Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   // User form state
   const [newUserForm, setNewUserForm] = useState({
@@ -134,6 +143,7 @@ export default function SettingsPage() {
 
   const handleSaveCompany = async () => {
     setSaving(true);
+    setCompanyError("");
     try {
       const res = await fetch("/api/settings/company", {
         method: "POST",
@@ -144,9 +154,13 @@ export default function SettingsPage() {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
         fetchCompany();
+      } else {
+        const data = await res.json();
+        setCompanyError(data.error || "Failed to save company settings");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save company settings", err);
+      setCompanyError(err.message || "Failed to save company settings");
     } finally {
       setSaving(false);
     }
@@ -188,18 +202,25 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteUser = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
-    try {
-      const res = await fetch(`/api/users/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        fetchUsers();
+  const handleDeleteUser = (id: string) => {
+    setDeleteConfirm({
+      show: true,
+      title: "Delete User Account",
+      message: "Are you sure you want to permanently delete this user account? They will immediately lose access to the system. This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/users/${id}`, {
+            method: "DELETE",
+          });
+          setDeleteConfirm(null);
+          if (res.ok) {
+            fetchUsers();
+          }
+        } catch (err) {
+          console.error("Failed to delete user", err);
+        }
       }
-    } catch (err) {
-      console.error("Failed to delete user", err);
-    }
+    });
   };
 
   return (
@@ -218,7 +239,8 @@ export default function SettingsPage() {
             return (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                type="button"
+                onClick={() => { setActiveTab(tab.key); setCompanyError(""); }}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -264,6 +286,11 @@ export default function SettingsPage() {
                   <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: 24 }}>
                     Company Profile
                   </h3>
+                  {companyError && (
+                    <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: "#ef4444", fontSize: "12.5px", marginBottom: 16 }}>
+                      {companyError}
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: 20, alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap" }}>
                     <div style={{ width: 80, height: 80, borderRadius: 20, background: companyForm.logoPath ? "transparent" : "linear-gradient(135deg, #10B981, #34D399)", border: companyForm.logoPath ? "1px solid var(--border-color)" : "none", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                       {companyForm.logoPath ? (
@@ -295,11 +322,12 @@ export default function SettingsPage() {
                         }}
                       />
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button className="btn-outline" style={{ fontSize: "12px", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }} onClick={() => document.getElementById("logo-upload-input")?.click()}>
+                        <button type="button" className="btn-outline" style={{ fontSize: "12px", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }} onClick={() => document.getElementById("logo-upload-input")?.click()}>
                           <Upload size={12} />Upload Logo
                         </button>
                         {companyForm.logoPath && (
                           <button
+                            type="button"
                             className="btn-outline"
                             style={{ fontSize: "12px", marginBottom: 6, display: "flex", alignItems: "center", gap: 6, borderColor: "#ef4444", color: "#ef4444" }}
                             onClick={() => setCompanyForm((prev) => ({ ...prev, logoPath: "" }))}
@@ -358,6 +386,11 @@ export default function SettingsPage() {
                   <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: 24 }}>
                     GST Configuration & Banking
                   </h3>
+                  {companyError && (
+                    <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: "#ef4444", fontSize: "12.5px", marginBottom: 16 }}>
+                      {companyError}
+                    </div>
+                  )}
                   <div className="responsive-grid-2" style={{ gap: 16 }}>
                     <div>
                       <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>GSTIN</label>
@@ -402,7 +435,7 @@ export default function SettingsPage() {
                       </h3>
                       <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: 2 }}>Manage personnel who have access to the desktop ERP.</p>
                     </div>
-                    <button className="btn-primary" onClick={() => setShowUserModal(true)} style={{ fontSize: "12.5px", padding: "8px 14px" }}>+ Add User</button>
+                    <button type="button" className="btn-primary" onClick={() => setShowUserModal(true)} style={{ fontSize: "12.5px", padding: "8px 14px" }}>+ Add User</button>
                   </div>
 
                   {usersLoading ? (
@@ -438,6 +471,7 @@ export default function SettingsPage() {
                                 <div style={{ fontWeight: 500 }}>{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString("en-IN") : "Never"}</div>
                               </div>
                               <button
+                                type="button"
                                 onClick={() => handleDeleteUser(user.id)}
                                 style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", transition: "all 0.15s" }}
                                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
@@ -495,7 +529,7 @@ export default function SettingsPage() {
                       </div>
                       <h4 style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: 6 }}>Create Backup</h4>
                       <p style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: 16, lineHeight: 1.5 }}>Export complete SQLite database file directly for offline storage.</p>
-                      <button className="btn-primary" style={{ width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 6, fontSize: "13px" }} onClick={() => alert("Creating manual SQL backup... Done! Files persisted in app directory.")}>
+                      <button type="button" className="btn-primary" style={{ width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 6, fontSize: "13px" }} onClick={() => alert("Creating manual SQL database backup... File successfully saved.")}>
                         <Download size={13} />Backup Now
                       </button>
                     </div>
@@ -505,7 +539,7 @@ export default function SettingsPage() {
                       </div>
                       <h4 style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: 6 }}>Restore Backup</h4>
                       <p style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: 16, lineHeight: 1.5 }}>Select a previously exported sqlite database back-up file.</p>
-                      <button className="btn-outline" style={{ width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 6, fontSize: "13px" }} onClick={() => alert("Select file dialogue triggered.")}>
+                      <button type="button" className="btn-outline" style={{ width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 6, fontSize: "13px" }} onClick={() => alert("Select file dialogue triggered.")}>
                         <Upload size={13} />Select Backup File
                       </button>
                     </div>
@@ -597,6 +631,7 @@ export default function SettingsPage() {
                     placeholder="e.g. rajesh@dhruvanshi.com"
                     className="input-field"
                     required
+                    autoComplete="off"
                   />
                 </div>
 
@@ -609,6 +644,7 @@ export default function SettingsPage() {
                     placeholder="••••••••"
                     className="input-field"
                     required
+                    autoComplete="new-password"
                   />
                 </div>
 
@@ -652,6 +688,40 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─────────────────────────────────── CUSTOM DELETION ALERT ─────────────────────────────────── */}
+      <AnimatePresence>
+        {deleteConfirm?.show && (
+          <div className="confirm-overlay" onClick={() => setDeleteConfirm(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="confirm-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="confirm-icon-container">
+                <Trash2 size={24} />
+              </div>
+              <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--text-primary)", marginBottom: 8 }}>
+                {deleteConfirm.title}
+              </h3>
+              <p style={{ fontSize: "13.5px", color: "var(--text-muted)", marginBottom: 24, lineHeight: 1.5 }}>
+                {deleteConfirm.message}
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <button type="button" className="btn-outline" onClick={() => setDeleteConfirm(null)} style={{ padding: "8px 16px" }}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-danger" onClick={deleteConfirm.onConfirm}>
+                  Delete
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

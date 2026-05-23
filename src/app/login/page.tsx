@@ -15,8 +15,8 @@ const roles: { value: Role; label: string; description: string }[] = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@dhruvanshi.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("ADMIN");
   const [showPassword, setShowPassword] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -307,6 +307,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@dhruvanshi.com"
                   required
+                  autoComplete="off"
                   className="input-field"
                 />
               </div>
@@ -333,6 +334,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    autoComplete="current-password"
                     className="input-field"
                     style={{ paddingRight: 44 }}
                   />

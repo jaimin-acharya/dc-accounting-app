@@ -67,16 +67,88 @@ export default function DocumentsPage() {
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  
+  // Custom Alert Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
   // Form State
   const [form, setForm] = useState({
     name: "",
     type: "PDF",
-    fileSizeKb: "512",
+    fileSizeKb: "",
     category: "Contracts",
     projectId: "",
     tags: "",
+    filePath: "",
   });
+
+  const [dragActive, setDragActive] = useState(false);
+  const [modalDragActive, setModalDragActive] = useState(false);
+
+  const handleFileLoad = (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size exceeds 10MB limit.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      const ext = file.name.split('.').pop()?.toUpperCase() || "PDF";
+      setForm((prev) => ({
+        ...prev,
+        name: file.name.replace(/\.[^/.]+$/, ""),
+        type: ["PDF", "DWG", "ZIP", "PNG", "JPG", "JPEG"].includes(ext) ? ext : "PDF",
+        fileSizeKb: Math.round(file.size / 1024).toString(),
+        filePath: base64,
+      }));
+      setError("");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      handleFileLoad(file);
+      setShowModal(true);
+    }
+  };
+
+  const handleModalDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setModalDragActive(true);
+    } else if (e.type === "dragleave") {
+      setModalDragActive(false);
+    }
+  };
+
+  const handleModalDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setModalDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      handleFileLoad(file);
+    }
+  };
 
   const fetchDocs = async () => {
     try {
@@ -109,10 +181,31 @@ export default function DocumentsPage() {
     fetchProjects();
   }, []);
 
+  const handleDownload = (doc: DocumentItem) => {
+    if (!doc.filePath) {
+      alert("No file data available for: " + doc.name);
+      return;
+    }
+    if (doc.filePath.startsWith("data:")) {
+      const link = document.createElement("a");
+      link.href = doc.filePath;
+      link.download = doc.name + "." + doc.type.toLowerCase();
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert("This is a simulated cloud file path: " + doc.filePath);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
       setError("Document name is required");
+      return;
+    }
+    if (!form.filePath) {
+      setError("Please select a file to upload first");
       return;
     }
     setSaving(true);
@@ -130,22 +223,24 @@ export default function DocumentsPage() {
           category: form.category,
           projectId: form.projectId || null,
           tags: form.tags,
-          filePath: `/documents/${form.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}.${form.type.toLowerCase()}`,
+          filePath: form.filePath,
         }),
       });
 
       if (!res.ok) {
-        throw new Error("Failed to save document metadata");
+        const d = await res.json();
+        throw new Error(d.error || "Failed to save document");
       }
 
       setShowModal(false);
       setForm({
         name: "",
         type: "PDF",
-        fileSizeKb: "512",
+        fileSizeKb: "",
         category: "Contracts",
         projectId: "",
         tags: "",
+        filePath: "",
       });
       fetchDocs();
     } catch (err: any) {
@@ -155,18 +250,25 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
-    try {
-      const res = await fetch(`/api/documents/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        fetchDocs();
+  const handleDelete = (id: string) => {
+    setDeleteConfirm({
+      show: true,
+      title: "Delete Document",
+      message: "Are you sure you want to permanently delete this document? This will remove the file reference from all associated sites and projects. This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/documents/${id}`, {
+            method: "DELETE",
+          });
+          setDeleteConfirm(null);
+          if (res.ok) {
+            fetchDocs();
+          }
+        } catch (err) {
+          console.error("Delete document error:", err);
+        }
       }
-    } catch (err) {
-      console.error("Delete document error:", err);
-    }
+    });
   };
 
   const categories = ["ALL", "Contracts", "Drawings", "Approvals", "Bills", "Photos", "Compliance", "General"];
@@ -194,15 +296,27 @@ export default function DocumentsPage() {
       {/* Upload Drop Zone */}
       <div
         onClick={() => setShowModal(true)}
-        style={{ border: "2px dashed var(--border-color)", borderRadius: 16, padding: "28px 24px", textAlign: "center", background: "rgba(16,185,129,0.04)", cursor: "pointer", transition: "all 0.2s ease" }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.08)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.04)"; }}
+        onDragEnter={handleDrag}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
+        onDrop={handleDrop}
+        style={{
+          border: dragActive ? "2px dashed var(--text-emerald)" : "2px dashed var(--border-color)",
+          borderRadius: 16,
+          padding: "28px 24px",
+          textAlign: "center",
+          background: dragActive ? "rgba(16,185,129,0.08)" : "rgba(16,185,129,0.04)",
+          cursor: "pointer",
+          transition: "all 0.2s ease",
+        }}
       >
         <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-          <Upload size={20} color="#10B981" />
+          <Upload size={20} color="#10B981" style={{ transform: dragActive ? "scale(1.1)" : "none", transition: "transform 0.15s ease" }} />
         </div>
-        <p style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--text-primary)", marginBottom: 4 }}>Drop files here or click to upload</p>
-        <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>PDF, DWG, Images, Archives — max 100MB per file</p>
+        <p style={{ fontWeight: 600, fontSize: "13.5px", color: dragActive ? "var(--text-emerald)" : "var(--text-primary)", marginBottom: 4 }}>
+          {dragActive ? "Drop file to select it!" : "Drop files here or click to upload"}
+        </p>
+        <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>PDF, DWG, Images, Archives — max 10MB per file</p>
       </div>
 
       {/* Filters */}
@@ -276,7 +390,7 @@ export default function DocumentsPage() {
                   <div style={{ display: "flex", gap: 4 }}>
                     <button style={{ width: 26, height: 26, borderRadius: 7, border: "1px solid var(--border-subtle)", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }}
                       title="Download"
-                      onClick={() => alert("Downloading file " + doc.name)}>
+                      onClick={() => handleDownload(doc)}>
                       <Download size={11} />
                     </button>
                     <button
@@ -329,7 +443,50 @@ export default function DocumentsPage() {
 
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
-                  <label className="form-label" style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>Document Name</label>
+                  <label className="form-label" style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>Select File *</label>
+                  <div
+                    onClick={() => document.getElementById("doc-file-input")?.click()}
+                    onDragEnter={handleModalDrag}
+                    onDragOver={handleModalDrag}
+                    onDragLeave={handleModalDrag}
+                    onDrop={handleModalDrop}
+                    style={{
+                      border: modalDragActive ? "2px dashed var(--text-emerald)" : "2px dashed var(--border-emerald)",
+                      background: modalDragActive ? "rgba(16,185,129,0.08)" : "rgba(16,185,129,0.03)",
+                      borderRadius: 12,
+                      padding: "20px 16px",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      marginBottom: 10,
+                    }}
+                    onMouseEnter={(e) => { if (!modalDragActive) e.currentTarget.style.background = "rgba(16,185,129,0.06)"; }}
+                    onMouseLeave={(e) => { if (!modalDragActive) e.currentTarget.style.background = "rgba(16,185,129,0.03)"; }}
+                  >
+                    <Upload size={20} color="#10B981" style={{ margin: "0 auto 8px", transform: modalDragActive ? "scale(1.1)" : "none", transition: "transform 0.15s ease" }} />
+                    <span style={{ fontSize: "12.5px", color: "var(--text-primary)", display: "block", fontWeight: 600 }}>
+                      {modalDragActive ? "Drop here!" : form.filePath ? "✓ Document Selected" : "Click or drop local document here"}
+                    </span>
+                    <span style={{ fontSize: "10.5px", color: "var(--text-muted)", marginTop: 4, display: "block" }}>
+                      Supports PDF, PNG, JPG, ZIP (max 10MB)
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    id="doc-file-input"
+                    accept=".pdf,.png,.jpg,.jpeg,.zip,.dwg"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileLoad(file);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>Document Name *</label>
                   <input
                     type="text"
                     value={form.name}
@@ -440,6 +597,40 @@ export default function DocumentsPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─────────────────────────────────── CUSTOM DELETION ALERT ─────────────────────────────────── */}
+      <AnimatePresence>
+        {deleteConfirm?.show && (
+          <div className="confirm-overlay" onClick={() => setDeleteConfirm(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="confirm-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="confirm-icon-container">
+                <Trash2 size={24} />
+              </div>
+              <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--text-primary)", marginBottom: 8 }}>
+                {deleteConfirm.title}
+              </h3>
+              <p style={{ fontSize: "13.5px", color: "var(--text-muted)", marginBottom: 24, lineHeight: 1.5 }}>
+                {deleteConfirm.message}
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <button type="button" className="btn-outline" onClick={() => setDeleteConfirm(null)} style={{ padding: "8px 16px" }}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-danger" onClick={deleteConfirm.onConfirm}>
+                  Delete
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

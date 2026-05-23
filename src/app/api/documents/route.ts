@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         name: body.name,
         type: body.type || "PDF",
         filePath: body.filePath || "",
-        fileSize: body.fileSize ? parseInt(body.fileSize) : null,
+        fileSize: body.fileSize ? Number(body.fileSize) : null,
         mimeType: body.mimeType || "",
         projectId: body.projectId || null,
         category: body.category || "General",

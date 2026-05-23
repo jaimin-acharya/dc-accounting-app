@@ -115,6 +115,14 @@ export default function ProjectsPage() {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   
+  // Custom Alert Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+  
   const [form, setForm] = useState(initialForm);
   const [clientForm, setClientForm] = useState(initialClientForm);
   const [saving, setSaving] = useState(false);
@@ -273,24 +281,38 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this project?")) return;
-    await fetch(`/api/projects/${id}`, { method: "DELETE" });
-    fetchProjects();
+  const handleDelete = (id: string) => {
+    setDeleteConfirm({
+      show: true,
+      title: "Delete Project",
+      message: "Are you sure you want to delete this project? This action is permanent and cannot be undone.",
+      onConfirm: async () => {
+        await fetch(`/api/projects/${id}`, { method: "DELETE" });
+        setDeleteConfirm(null);
+        fetchProjects();
+      }
+    });
   };
 
-  const handleClientDelete = async (id: string) => {
-    if (!confirm("Delete this client? Any associated projects will be unlinked but kept intact.")) return;
-    try {
-      const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        throw new Error("Failed to delete client");
+  const handleClientDelete = (id: string) => {
+    setDeleteConfirm({
+      show: true,
+      title: "Delete Client",
+      message: "Are you sure you want to delete this client? Any associated projects will be unlinked but kept intact.",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
+          if (!res.ok) {
+            throw new Error("Failed to delete client");
+          }
+          setDeleteConfirm(null);
+          await fetchClients();
+          await fetchProjects();
+        } catch (e: any) {
+          alert(e.message);
+        }
       }
-      await fetchClients();
-      await fetchProjects();
-    } catch (e: any) {
-      alert(e.message);
-    }
+    });
   };
 
   const filtered = projects.filter((p) => {
@@ -859,6 +881,40 @@ export default function ProjectsPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─────────────────────────────────── CUSTOM DELETION ALERT ─────────────────────────────────── */}
+      <AnimatePresence>
+        {deleteConfirm?.show && (
+          <div className="confirm-overlay" onClick={() => setDeleteConfirm(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="confirm-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="confirm-icon-container">
+                <Trash2 size={24} />
+              </div>
+              <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--text-primary)", marginBottom: 8 }}>
+                {deleteConfirm.title}
+              </h3>
+              <p style={{ fontSize: "13.5px", color: "var(--text-muted)", marginBottom: 24, lineHeight: 1.5 }}>
+                {deleteConfirm.message}
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <button type="button" className="btn-outline" onClick={() => setDeleteConfirm(null)} style={{ padding: "8px 16px" }}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-danger" onClick={deleteConfirm.onConfirm}>
+                  Delete
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

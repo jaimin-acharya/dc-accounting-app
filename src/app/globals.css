@@ -343,12 +343,20 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto; /* Enable scroll if content overflows */
+  padding: 24px 12px;
+}
+
+@media (max-height: 700px) or (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-start; /* Align to top on mobile for natural scrolling */
+  }
 }
 
 .modal-content {
@@ -360,6 +368,13 @@ body {
   max-width: 560px;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(20px);
+}
+
+@media (max-width: 640px) {
+  .modal-content {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
 }
 
 /* ─── Skeleton Loader ────────────────────────────────────────────────────────── */
@@ -678,4 +693,65 @@ body {
     justify-content: center;
   }
 }
+
+/* ─── Custom Confirm Alert Dialog ───────────────────────────────────────────── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+}
+
+.confirm-card {
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.05);
+  text-align: center;
+  backdrop-filter: blur(25px);
+}
+
+.confirm-icon-container {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 

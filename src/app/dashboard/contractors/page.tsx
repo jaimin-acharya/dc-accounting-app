@@ -44,6 +44,14 @@ export default function ContractorsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingContractorId, setEditingContractorId] = useState<string | null>(null);
   
+  // Custom Alert Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+  
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -123,20 +131,27 @@ export default function ContractorsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this contractor?")) return;
-    try {
-      const res = await fetch(`/api/contractors/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        fetchContractors();
-      } else {
-        alert("Failed to delete contractor");
+  const handleDelete = (id: string) => {
+    setDeleteConfirm({
+      show: true,
+      title: "Remove Contractor",
+      message: "Are you sure you want to remove this contractor? This will erase their active site association, daily rates, and profiles. This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/contractors/${id}`, {
+            method: "DELETE",
+          });
+          setDeleteConfirm(null);
+          if (res.ok) {
+            fetchContractors();
+          } else {
+            alert("Failed to delete contractor");
+          }
+        } catch (err) {
+          console.error(err);
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   const filtered = contractors.filter(
@@ -494,6 +509,40 @@ export default function ContractorsPage() {
                   </button>
                 </div>
               </form>
+            </motionFramer.div>
+          </div>
+        )}
+      </AnimatePresenceFramer>
+
+      {/* ─────────────────────────────────── CUSTOM DELETION ALERT ─────────────────────────────────── */}
+      <AnimatePresenceFramer>
+        {deleteConfirm?.show && (
+          <div className="confirm-overlay" onClick={() => setDeleteConfirm(null)}>
+            <motionFramer.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="confirm-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="confirm-icon-container">
+                <Trash2 size={24} />
+              </div>
+              <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--text-primary)", marginBottom: 8 }}>
+                {deleteConfirm.title}
+              </h3>
+              <p style={{ fontSize: "13.5px", color: "var(--text-muted)", marginBottom: 24, lineHeight: 1.5 }}>
+                {deleteConfirm.message}
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <button type="button" className="btn-outline" onClick={() => setDeleteConfirm(null)} style={{ padding: "8px 16px" }}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-danger" onClick={deleteConfirm.onConfirm}>
+                  Delete
+                </button>
+              </div>
             </motionFramer.div>
           </div>
         )}
