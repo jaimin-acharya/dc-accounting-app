@@ -34,4 +34,11 @@ copyFolderRecursiveSync(
   path.join(__dirname, '../.next/standalone/.next/static')
 );
 
+// Copy prisma to .next/standalone/prisma
+console.log('Copying prisma directory to standalone...');
+copyFolderRecursiveSync(
+  path.join(__dirname, '../prisma'),
+  path.join(__dirname, '../.next/standalone/prisma')
+);
+
 console.log('Static assets copied successfully!');
