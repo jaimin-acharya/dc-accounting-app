@@ -18,6 +18,7 @@ import {
   Briefcase,
   FileSpreadsheet,
   Trash2,
+  Pencil,
 } from "lucide-react";
 
 interface Client {
@@ -110,7 +111,10 @@ export default function ProjectsPage() {
   const [showClientModal, setShowClientModal] = useState(false);
   const [showQuickClientModal, setShowQuickClientModal] = useState(false);
   
-  // Forms
+  // Forms & Editing States
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  
   const [form, setForm] = useState(initialForm);
   const [clientForm, setClientForm] = useState(initialClientForm);
   const [saving, setSaving] = useState(false);
@@ -148,6 +152,56 @@ export default function ProjectsPage() {
     fetchClients();
   }, []);
 
+  const handleEditProject = (project: any) => {
+    setForm({
+      name: project.name || "",
+      clientId: project.clientId || "",
+      siteAddress: project.siteAddress || "",
+      city: project.city || "",
+      state: project.state || "Gujarat",
+      status: project.status || "PLANNING",
+      startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
+      endDate: project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : "",
+      estimatedBudget: project.estimatedBudget?.toString() || "",
+      contractValue: project.contractValue?.toString() || "",
+      progress: project.progress?.toString() || "0",
+      notes: project.notes || "",
+    });
+    setEditingProjectId(project.id);
+    setShowModal(true);
+  };
+
+  const handleEditClient = (client: any) => {
+    setClientForm({
+      name: client.name || "",
+      company: client.company || "",
+      email: client.email || "",
+      phone: client.phone || "",
+      address: client.address || "",
+      city: client.city || "",
+      state: client.state || "Gujarat",
+      gstin: client.gstin || "",
+      pan: client.pan || "",
+      notes: client.notes || "",
+    });
+    setEditingClientId(client.id);
+    setShowClientModal(true);
+  };
+
+  const handleCloseProjectModal = () => {
+    setShowModal(false);
+    setForm(initialForm);
+    setEditingProjectId(null);
+    setError("");
+  };
+
+  const handleCloseClientModal = () => {
+    setShowClientModal(false);
+    setClientForm(initialClientForm);
+    setEditingClientId(null);
+    setClientError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
@@ -157,8 +211,11 @@ export default function ProjectsPage() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
+      const url = editingProjectId ? `/api/projects/${editingProjectId}` : "/api/projects";
+      const method = editingProjectId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -168,6 +225,7 @@ export default function ProjectsPage() {
       }
       setShowModal(false);
       setForm(initialForm);
+      setEditingProjectId(null);
       fetchProjects();
     } catch (e: any) {
       setError(e.message);
@@ -185,8 +243,11 @@ export default function ProjectsPage() {
     setClientSaving(true);
     setClientError("");
     try {
-      const res = await fetch("/api/clients", {
-        method: "POST",
+      const url = editingClientId ? `/api/clients/${editingClientId}` : "/api/clients";
+      const method = editingClientId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(clientForm),
       });
@@ -196,6 +257,7 @@ export default function ProjectsPage() {
       }
       const newClient = await res.json();
       setClientForm(initialClientForm);
+      setEditingClientId(null);
       await fetchClients();
       
       if (isQuickAdd) {
@@ -389,6 +451,9 @@ export default function ProjectsPage() {
                       </div>
                       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                         <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: "11px", fontWeight: 600, color: status.color, background: status.bg }}>{status.label}</span>
+                        <button onClick={(e) => { e.stopPropagation(); handleEditProject(project); }} style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }} title="Edit">
+                          <Pencil size={11} />
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); handleDelete(project.id); }} style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)" }} title="Delete">
                           <X size={11} />
                         </button>
@@ -451,8 +516,11 @@ export default function ProjectsPage() {
                         </td>
                         <td style={{ fontWeight: 700, color: "var(--text-emerald)" }}>{formatCurrency(project.contractValue)}</td>
                         <td style={{ color: "var(--text-secondary)", fontSize: "12.5px" }}>{project.endDate ? new Date(project.endDate).toLocaleDateString("en-IN") : "—"}</td>
-                        <td>
-                          <button onClick={() => handleDelete(project.id)} style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", color: "var(--text-muted)", fontSize: "12px" }}>
+                        <td style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
+                          <button onClick={() => handleEditProject(project)} style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", color: "var(--text-emerald)", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            <Pencil size={11} /> Edit
+                          </button>
+                          <button onClick={() => handleDelete(project.id)} style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)", background: "transparent", cursor: "pointer", color: "#ef4444", fontSize: "12px" }}>
                             Delete
                           </button>
                         </td>
@@ -534,27 +602,47 @@ export default function ProjectsPage() {
                         {!client.gstin && !client.pan && <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>}
                       </td>
                       <td style={{ textAlign: "right" }}>
-                        <button
-                          onClick={() => handleClientDelete(client.id)}
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            border: "1px solid rgba(239,68,68,0.2)",
-                            background: "transparent",
-                            cursor: "pointer",
-                            color: "#ef4444",
-                            fontSize: "12px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            transition: "all 0.15s ease",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.08)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                        >
-                          <Trash2 size={12} />
-                          Delete
-                        </button>
+                        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                          <button
+                            onClick={() => handleEditClient(client)}
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              border: "1px solid var(--border-subtle)",
+                              background: "transparent",
+                              cursor: "pointer",
+                              color: "var(--text-emerald)",
+                              fontSize: "12px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleClientDelete(client.id)}
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              border: "1px solid rgba(239,68,68,0.2)",
+                              background: "transparent",
+                              cursor: "pointer",
+                              color: "#ef4444",
+                              fontSize: "12px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.08)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                          >
+                            <Trash2 size={12} />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </motion.tr>
                   ))}
@@ -569,11 +657,11 @@ export default function ProjectsPage() {
       {/* ─────────────────────────────────── MODAL: NEW PROJECT ─────────────────────────────────── */}
       <AnimatePresence>
         {showModal && (
-          <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-overlay" onClick={handleCloseProjectModal}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className="modal-content" style={{ maxWidth: 680, maxHeight: "90vh", overflowY: "auto", position: "relative" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--text-primary)" }}>New Project</h2>
-                <button onClick={() => setShowModal(false)} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} /></button>
+                <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--text-primary)" }}>{editingProjectId ? "Edit Project" : "New Project"}</h2>
+                <button onClick={handleCloseProjectModal} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} /></button>
               </div>
               
               <form onSubmit={handleSubmit}>
@@ -657,9 +745,9 @@ export default function ProjectsPage() {
                 </div>
                 {error && <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, fontSize: "13px", color: "#ef4444" }}>{error}</div>}
                 <div style={{ display: "flex", gap: 8, marginTop: 24, justifyContent: "flex-end" }}>
-                  <button type="button" className="btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="button" className="btn-outline" onClick={handleCloseProjectModal}>Cancel</button>
                   <button type="submit" className="btn-primary" disabled={saving} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {saving ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />Saving...</> : <><Plus size={14} />Create Project</>}
+                    {saving ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />Saving...</> : editingProjectId ? <><Pencil size={14} />Save Changes</> : <><Plus size={14} />Create Project</>}
                   </button>
                 </div>
               </form>
@@ -671,11 +759,11 @@ export default function ProjectsPage() {
       {/* ─────────────────────────────────── MODAL: NEW CLIENT (STANDALONE) ─────────────────────────────────── */}
       <AnimatePresence>
         {showClientModal && (
-          <div className="modal-overlay" onClick={() => setShowClientModal(false)}>
+          <div className="modal-overlay" onClick={handleCloseClientModal}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className="modal-content" style={{ maxWidth: 600, maxHeight: "90vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--text-primary)" }}>New Corporate Client</h2>
-                <button onClick={() => setShowClientModal(false)} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} /></button>
+                <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--text-primary)" }}>{editingClientId ? "Edit Corporate Client" : "New Corporate Client"}</h2>
+                <button onClick={handleCloseClientModal} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "transparent", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} /></button>
               </div>
 
               <form onSubmit={(e) => handleClientSubmit(e, false)}>
@@ -723,9 +811,9 @@ export default function ProjectsPage() {
                 </div>
                 {clientError && <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, fontSize: "13px", color: "#ef4444" }}>{clientError}</div>}
                 <div style={{ display: "flex", gap: 8, marginTop: 24, justifyContent: "flex-end" }}>
-                  <button type="button" className="btn-outline" onClick={() => setShowClientModal(false)}>Cancel</button>
+                  <button type="button" className="btn-outline" onClick={handleCloseClientModal}>Cancel</button>
                   <button type="submit" className="btn-primary" disabled={clientSaving}>
-                    {clientSaving ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />Saving...</> : <><Plus size={14} />Add Client</>}
+                    {clientSaving ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />Saving...</> : editingClientId ? <><Pencil size={14} />Save Changes</> : <><Plus size={14} />Add Client</>}
                   </button>
                 </div>
               </form>

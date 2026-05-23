@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion as motionFramer, AnimatePresence as AnimatePresenceFramer } from "framer-motion";
-import { Plus, Search, Phone, Mail, HardHat, IndianRupee, Users, Calendar, Trash2, Loader2, X, AlertCircle } from "lucide-react";
+import { Plus, Search, Phone, Mail, HardHat, IndianRupee, Users, Calendar, Trash2, Loader2, X, AlertCircle, Pencil } from "lucide-react";
 
 interface Contractor {
   id: string;
@@ -42,6 +42,8 @@ export default function ContractorsPage() {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingContractorId, setEditingContractorId] = useState<string | null>(null);
+  
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -64,6 +66,32 @@ export default function ContractorsPage() {
     fetchContractors();
   }, []);
 
+  const handleEditContractor = (contractor: Contractor) => {
+    setForm({
+      name: contractor.name || "",
+      company: contractor.company || "",
+      phone: contractor.phone || "",
+      email: contractor.email || "",
+      address: contractor.address || "",
+      specialty: contractor.specialty || "",
+      gstin: contractor.gstin || "",
+      pan: contractor.pan || "",
+      bankAccount: contractor.bankAccount || "",
+      bankIFSC: contractor.bankIFSC || "",
+      dailyRate: contractor.dailyRate?.toString() || "",
+      notes: contractor.notes || "",
+    });
+    setEditingContractorId(contractor.id);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setForm(initialForm);
+    setEditingContractorId(null);
+    setError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
@@ -73,17 +101,20 @@ export default function ContractorsPage() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/contractors", {
-        method: "POST",
+      const url = editingContractorId ? `/api/contractors/${editingContractorId}` : "/api/contractors";
+      const method = editingContractorId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || "Failed to create contractor");
+        throw new Error(d.error || "Failed to save contractor");
       }
       setShowModal(false);
       setForm(initialForm);
+      setEditingContractorId(null);
       fetchContractors();
     } catch (err: any) {
       setError(err.message);
@@ -212,6 +243,15 @@ export default function ContractorsPage() {
                         {c.isActive ? "Active" : "Inactive"}
                       </span>
                       <button
+                        onClick={() => handleEditContractor(c)}
+                        style={{ border: "none", background: "none", color: "var(--text-muted)", cursor: "pointer", transition: "color 0.2s" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-emerald)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                        title="Edit Contractor"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
                         onClick={() => handleDelete(c.id)}
                         style={{ border: "none", background: "none", color: "var(--text-muted)", cursor: "pointer", transition: "color 0.2s" }}
                         onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
@@ -299,7 +339,7 @@ export default function ContractorsPage() {
       {/* Add Contractor Modal */}
       <AnimatePresenceFramer>
         {showModal && (
-          <div className="modal-overlay" onClick={() => setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+          <div className="modal-overlay" onClick={handleCloseModal} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
             <motionFramer.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -311,9 +351,9 @@ export default function ContractorsPage() {
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--text-primary)" }}>
-                  Add New Contractor / Labor
+                  {editingContractorId ? "Edit Contractor / Labor Details" : "Add New Contractor / Labor"}
                 </h2>
-                <button onClick={() => setShowModal(false)} style={{ border: "1px solid var(--border-subtle)", background: "transparent", width: 28, height: 28, borderRadius: 8, cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <button onClick={handleCloseModal} style={{ border: "1px solid var(--border-subtle)", background: "transparent", width: 28, height: 28, borderRadius: 8, cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <X size={14} />
                 </button>
               </div>
@@ -446,12 +486,11 @@ export default function ContractorsPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
-                  <button type="button" className="btn-outline" onClick={() => setShowModal(false)} disabled={saving}>
+                  <button type="button" className="btn-outline" onClick={handleCloseModal} disabled={saving}>
                     Cancel
                   </button>
                   <button type="submit" className="btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} disabled={saving}>
-                    {saving && <Loader2 size={14} className="animate-spin" style={{ animation: "spin 1s linear infinite" }} />}
-                    Add Contractor
+                    {saving ? <><Loader2 size={14} className="animate-spin" style={{ animation: "spin 1s linear infinite" }} />Saving...</> : editingContractorId ? <><Pencil size={14} />Save Changes</> : <><Plus size={14} />Add Contractor</>}
                   </button>
                 </div>
               </form>
